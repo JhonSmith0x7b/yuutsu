@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build:
+      context: ./fastapi/
+      dockerfile: Dockerfile
+    container_name: y_service
+    working_dir: /app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - ./fastapi/app:/app
+    ports:
+      - "8000:8000"
+    restart: always
+  nginx:
+    image: nginx:latest
+    container_name: y_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/config:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - fastapi
+    restart: always
+  redis:
+    image: redis:7.2.4
+    container_name: y_redis
+    restart: always
+    volumes:
+      - ./redis/data:/data
+    ports:
+      - "6379"

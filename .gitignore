@@ -1,0 +1,4 @@
+*.conf
+*.pyc
+.env
+*.rdb
