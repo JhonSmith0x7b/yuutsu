@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import StreamingResponse
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable
@@ -11,14 +11,18 @@ from langchain_fix.redis_history import RedisChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from agents import SimpleHelper
 from fastapi import Response
+import shutil
+import os
 
 
 app = FastAPI()
 simple_helper = None
 
+
 def init_agents() -> None:
     global simple_helper
     simple_helper = SimpleHelper()
+
 
 @app.get("/simple-helper")
 async def get(request: Request) -> Response:
@@ -32,6 +36,14 @@ async def get(request: Request) -> Response:
         content=simple_helper.astream(input, session_id), 
         media_type="text/plain"
         )
+
+
+@app.post("/uploadfile/")
+async def create_upload_file(file: UploadFile = File(...)):
+    os.path.exists("./uploads") or os.makedirs("./uploads")
+    with open(f"uploads/{file.filename}", "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"filename": file.filename}
 
 
 init_agents()
