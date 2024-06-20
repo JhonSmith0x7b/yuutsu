@@ -29,9 +29,9 @@ async def get(request: Request) -> Response:
     query_params = request.query_params
     input = query_params.get("input")
     headers = request.headers
-    session_id = headers["session_id"]
+    session_id = query_params.get("session_id")
     if not session_id:
-        return Response(content="session_id is required", status_code=500)
+        return Response(content="session_id is required", status_code=501)
     return StreamingResponse(
         content=simple_helper.astream(input, session_id), 
         media_type="text/plain"
