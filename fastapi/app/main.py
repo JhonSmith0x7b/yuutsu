@@ -13,6 +13,7 @@ from agents import SimpleHelper
 from fastapi import Response
 import shutil
 import os
+from utils import simple_asr
 
 
 app = FastAPI()
@@ -43,7 +44,16 @@ async def create_upload_file(file: UploadFile = File(...)):
     os.path.exists("./uploads") or os.makedirs("./uploads")
     with open(f"uploads/{file.filename}", "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    return {"filename": file.filename}
+    result = await simple_asr(f"uploads/{file.filename}")
+    text = result['payload_msg']['result'][0]['text']
+    return {"text": text}
+
+
+@app.get("/test/")
+async def test():
+    result = await simple_asr("./uploads/tmp.mp3")
+    print(result)
+    return {"message": "Hello, World!"}
 
 
 init_agents()
