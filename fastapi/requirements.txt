@@ -9,3 +9,4 @@ redis==5.0.3
 python-multipart==0.0.9
 websocket-client==1.7.0
 websockets==11.0.3
+azure-cognitiveservices-speech==1.38.0

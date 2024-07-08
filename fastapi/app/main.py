@@ -13,11 +13,14 @@ from agents import SimpleHelper
 from fastapi import Response
 import shutil
 import os
-from utils import simple_asr
+from utils import simple_asr, simple_tts
+from fastapi.staticfiles import StaticFiles
 
 
 app = FastAPI()
 simple_helper = None
+
+app.mount("/audios", StaticFiles(directory="./audios"), name="audios")
 
 
 def init_agents() -> None:
@@ -39,8 +42,8 @@ async def get(request: Request) -> Response:
         )
 
 
-@app.post("/uploadfile/")
-async def create_upload_file(file: UploadFile = File(...)):
+@app.post("/uploadfile")
+async def create_upload_file(file: UploadFile = File(...)) -> Response:
     os.path.exists("./uploads") or os.makedirs("./uploads")
     with open(f"uploads/{file.filename}", "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -49,8 +52,19 @@ async def create_upload_file(file: UploadFile = File(...)):
     return {"text": text}
 
 
-@app.get("/test/")
-async def test():
+@app.get("/tts")
+async def tts(request: Request) -> Response:
+    query_params = request.query_params
+    text = query_params.get("text")
+    result = simple_tts(text)
+    if not result:
+        return Response(content="Error occurred during TTS", status_code=501)
+    file_url = str(request.base_url) + result[2:]
+    return {"tts_url": file_url}
+
+
+@app.get("/test")
+async def test() -> Response:
     result = await simple_asr("./uploads/tmp.mp3")
     print(result)
     return {"message": "Hello, World!"}
