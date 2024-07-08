@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 simple_helper = None
-
+os.path.exists("./audios") or os.makedirs("./audios")
 app.mount("/audios", StaticFiles(directory="./audios"), name="audios")
 
 
