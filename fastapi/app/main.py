@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable
@@ -9,7 +9,7 @@ import uvicorn
 import logging
 from langchain_fix.redis_history import RedisChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from agents import SimpleHelper
+from agents import SimpleHelper, ImageGener
 from fastapi import Response
 import shutil
 import os
@@ -24,8 +24,10 @@ app.mount("/audios", StaticFiles(directory="./audios"), name="audios")
 
 
 def init_agents() -> None:
-    global simple_helper
+    global simple_helper, image_gener
     simple_helper = SimpleHelper()
+    image_gener = ImageGener()
+    
 
 
 @app.get("/simple-helper")
@@ -50,6 +52,20 @@ async def create_upload_file(file: UploadFile = File(...)) -> Response:
     result = await simple_asr(f"uploads/{file.filename}")
     text = result['payload_msg']['result'][0]['text']
     return {"text": text}
+
+
+@app.post("/image-gen")
+async def create_upload_file(
+    file: UploadFile = File(...), 
+    prompt: str = Form(...),
+    platform: str = Form(...),
+    text_length: str = Form(...)
+    ) -> Response:
+    os.path.exists("./images") or os.makedirs("./images")
+    with open(f"images/{file.filename}", "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    result = image_gener.invoke(f"images/{file.filename}", prompt, platform, text_length)
+    return {"text": result}
 
 
 @app.get("/tts")

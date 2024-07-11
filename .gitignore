@@ -3,3 +3,6 @@
 .env
 *.rdb
 *.mp3
+images/
+audios/
+uploads/
